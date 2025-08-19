@@ -83,10 +83,10 @@ agentcore invoke '{"prompt": "Im planning to travel to Shanghai, and suggestion?
 After the agent is deployed, you can monitor the agent logs in CloudWatch Logs. 
 The **agentcore launch** should have printed out the following useful info:
 ```bash
-# Agent logs available at:                                                                                                                                                      │
-#    /aws/bedrock-agentcore/runtimes/travel_agent-...                                                                                                               │
-#    /aws/bedrock-agentcore/runtimes/travel_agent-.../runtime-logs                                                                                                  │
-#                                                                                                                                                                                  │
-# 💡 Tail logs with:                                                                                                                                                               │
-#    aws logs tail /aws/bedrock-agentcore/runtimes/travel_agent-...-DEFAULT --follow                                                                                        │
-#    aws logs tail /aws/bedrock-agentcore/runtimes/travel_agent-...-DEFAULT --since 1h                                                                                      │
+# Agent logs available at:                                                                                                                                                      
+#    /aws/bedrock-agentcore/runtimes/travel_agent-...                                                                                                               
+#    /aws/bedrock-agentcore/runtimes/travel_agent-...                                                                                                  
+#                                                                                                                                                                                  
+# 💡 Tail logs with:                                                                                                                                                               
+#    aws logs tail /aws/bedrock-agentcore/runtimes/travel_agent-... --follow                                                                                        
+#    aws logs tail /aws/bedrock-agentcore/runtimes/travel_agent-... --since 1h                                                                                      
