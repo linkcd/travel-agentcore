@@ -1,4 +1,4 @@
-# Travel Agent - Standalone 
+# Travel Agent with Amazon Bedrock AgentCore Runtime
 
 ## Overview
 
@@ -16,7 +16,7 @@ pip install -r requirements.txt
 ```
 
 ## 2. Create the app file of your agent
-Create a simple agent [travel_agent_standalone.py](./travel_agent_standalone.py)
+Create a simple agent [travel_agent_standalone.py](./travel-agent.py)
 
 ## 3. Run and test the agent locally
 ```bash
@@ -78,24 +78,12 @@ Based on these info, you can invoke the agent using AgentCore CLI.
 agentcore invoke '{"prompt": "Im planning to travel to Shanghai, and suggestion?"}'
 ```
 
-### 5.1 About AuthN and AuthZ
-AgentCore Runtime ONLY supports 2 types of authentication: IAM (SigV4) and Bearer token (OAuth).
-
-In this case, as when we deployed, we did not configure the authentication as using Bearer token, the "agentcore invoke" was using IAM auth. It means IMA is controlling both AuthN and AuthZ.
-
-In addition:
-1. It is NOT using AgentCore Identity yet (will cover that in the following examples)
-2. Without using AgentCore Idengity, AgentCore Runtime itself does not include end user interaction (ie. login), so it works the best for machine to machine communication, such 
-- 1) aws services calls this agent with IAM role (like this example), or 
-- 2) the client already obtain an valid bearer token (either ROPC as the example code with cognite, or other OAuth JWT with Auth code flow somehow the client got)
-3. You can create multiple endpoints for different auth, such as one for IAM and for Bearer token (need test)
-
 ## 6. Observability
 ### 6.1. CloudWatch Logs
 After the agent is deployed, you can monitor the agent logs in CloudWatch Logs. 
 The **agentcore launch** should have printed out the following useful info:
 ```bash
-# Agent logs available at:                                                                                                                                                     
+# Agent logs available at:                                                                                                                                                      
 #    /aws/bedrock-agentcore/runtimes/travel_agent-...                                                                                                               
 #    /aws/bedrock-agentcore/runtimes/travel_agent-...                                                                                                  
 #                                                                                                                                                                                  

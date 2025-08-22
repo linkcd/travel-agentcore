@@ -1,0 +1,30 @@
+default_agent: travel_agent
+agents:
+  travel_agent:
+    name: travel_agent
+    entrypoint: travel-agent.py
+    platform: linux/arm64
+    container_runtime: docker
+    aws:
+      execution_role: arn:aws:iam::[YOUR_AWS_ACCOUNT_NUMBER]:role/AmazonBedrockAgentCoreSDKRuntime-eu-central-1-xxxyyyzzz
+      execution_role_auto_create: false
+      account: '[YOUR_AWS_ACCOUNT_NUMBER]'
+      region: eu-central-1
+      ecr_repository: [YOUR_AWS_ACCOUNT_NUMBER].dkr.ecr.eu-central-1.amazonaws.com/bedrock-agentcore-travel_agent
+      ecr_auto_create: false
+      network_configuration:
+        network_mode: PUBLIC
+      protocol_configuration:
+        server_protocol: HTTP
+      observability:
+        enabled: true
+    bedrock_agentcore:
+      agent_id: travel_agent-UCTMjZAbsV
+      agent_arn: arn:aws:bedrock-agentcore:eu-central-1:[YOUR_AWS_ACCOUNT_NUMBER]:runtime/travel_agent-UCTMjZAbsV
+      agent_session_id: ...# This will be filled after deployment
+    codebuild:
+      project_name: bedrock-agentcore-travel_agent-builder
+      execution_role: arn:aws:iam::[YOUR_AWS_ACCOUNT_NUMBER]:role/AmazonBedrockAgentCoreSDKCodeBuild-eu-central-1-xxxyyyzzz
+      source_bucket: bedrock-agentcore-codebuild-sources-[YOUR_AWS_ACCOUNT_NUMBER]-eu-central-1
+    authorizer_configuration: null
+    oauth_configuration: null
