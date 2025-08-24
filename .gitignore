@@ -173,3 +173,4 @@ Thumbs.db
 # Logs
 *.log
 logs/
+02_agent_inbound_authn/scripts/.env.dev
