@@ -7,8 +7,19 @@ import os
 REGION_NAME = "eu-central-1"
 
 # === Agent Invocation Demo ===
-invoke_agent_arn = "arn:aws:bedrock-agentcore:eu-central-1:548129671048:runtime/travel_agent_inbound_authn-9jQJRuD5pz"
+# Validate required environment variables
+invoke_agent_arn = os.environ.get('AGENT_ARN')
 auth_token = os.environ.get('AUTH_TOKEN')
+
+if not invoke_agent_arn:
+    print("❌ Error: AGENT_ARN environment variable is not set")
+    print("📝 Please run: source ./scripts/.agent_arn")
+    exit(1)
+
+if not auth_token:
+    print("❌ Error: AUTH_TOKEN environment variable is not set")
+    print("📝 Please run: source ./scripts/.auth_token")
+    exit(1)
 
 # URL encode the agent ARN
 escaped_agent_arn = urllib.parse.quote(invoke_agent_arn, safe='')

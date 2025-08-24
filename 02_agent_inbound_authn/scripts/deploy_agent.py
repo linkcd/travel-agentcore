@@ -19,7 +19,7 @@ def main():
     agentcore_runtime = Runtime()
     
     response = agentcore_runtime.configure(
-        entrypoint="travel_agent_inbound_authn.py",
+        entrypoint="travel_agent_standalone.py",
         auto_create_execution_role=True,
         auto_create_ecr=True,
         requirements_file="requirements.txt",
@@ -38,6 +38,15 @@ def main():
     # Deploy the agent
     launch_result = agentcore_runtime.launch()
     print("Launch result:", launch_result)
+    
+    # Save agent ARN to file
+    if hasattr(launch_result, 'agent_arn') and launch_result.agent_arn:
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        agent_arn_path = os.path.join(script_dir, '.agent_arn')
+        with open(agent_arn_path, 'w') as f:
+            f.write(f'export AGENT_ARN="{launch_result.agent_arn}"\n')
+        print(f"\n✅ Agent ARN saved to {agent_arn_path}")
+        print(f"📝 To use in your shell, run: source {agent_arn_path}")
 
     status_response = agentcore_runtime.status()
     status = status_response.endpoint['status']

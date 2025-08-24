@@ -7,7 +7,7 @@ from jose.backends.rsa_backend import RSAKey
 
 
 TENANT_ID = os.environ["ENTRA_TENANT_ID"]
-CLIENT_ID = os.environ["ENTRA_CLIENT_ID"]
+CLIENT_ID = os.environ["ENTRA_AUDIENCE"]
 
 DEVICE_CODE_URL = f"https://login.microsoftonline.com/{TENANT_ID}/oauth2/v2.0/devicecode"
 TOKEN_URL = f"https://login.microsoftonline.com/{TENANT_ID}/oauth2/v2.0/token"
@@ -98,20 +98,24 @@ while True:
             
             
             # --- Export to shell ---
-            with open('.auth_token', 'w') as f:
+            script_dir = os.path.dirname(os.path.abspath(__file__))
+            auth_token_path = os.path.join(script_dir, '.auth_token')
+            with open(auth_token_path, 'w') as f:
                 f.write(f'export AUTH_TOKEN="{id_token}"\n')
             
             print("\n✅ Token added to environment variable AUTH_TOKEN")
-            print("\n📝 To use in your shell, run: source .auth_token")
+            print(f"\n📝 To use in your shell, run: source {auth_token_path}")
             print(f"\n🔑 Token: {id_token[:50]}...")
 
         except Exception as e:
             print("\n❌ ID Token verification FAILED")
             print("Reason:", str(e))
             # Still export the token even if verification fails
-            with open('.auth_token', 'w') as f:
+            script_dir = os.path.dirname(os.path.abspath(__file__))
+            auth_token_path = os.path.join(script_dir, '.auth_token')
+            with open(auth_token_path, 'w') as f:
                 f.write(f'export AUTH_TOKEN="{id_token}"\n')
-            print("\n📝 Token exported to .auth_token (run: source .auth_token)")
+            print(f"\n📝 Token exported to {auth_token_path} (run: source {auth_token_path})")
 
         break
 
