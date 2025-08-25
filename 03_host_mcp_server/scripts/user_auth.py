@@ -7,7 +7,7 @@ from jose.backends.rsa_backend import RSAKey
 
 
 TENANT_ID = os.environ["ENTRA_TENANT_ID"]
-CLIENT_ID = os.environ["ENTRA_CLIENT_ID"]
+CLIENT_ID = os.environ["ENTRA_CLIENT_ID_MCP"]
 
 DEVICE_CODE_URL = f"https://login.microsoftonline.com/{TENANT_ID}/oauth2/v2.0/devicecode"
 TOKEN_URL = f"https://login.microsoftonline.com/{TENANT_ID}/oauth2/v2.0/token"

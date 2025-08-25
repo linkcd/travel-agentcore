@@ -7,7 +7,7 @@ import json
 import os
 
 # Azure AD configuration from environment variables
-CLIENT_ID = os.getenv('ENTRA_AUDIENCE')  # Using ENTRA_AUDIENCE as CLIENT_ID
+CLIENT_ID = os.getenv('ENTRA_CLIENT_ID')  
 CLIENT_SECRET = os.getenv('ENTRA_CLIENT_SECRET')  # Add this env var if needed
 TENANT_ID = os.getenv('ENTRA_TENANT_ID')
 REDIRECT_URI = "http://localhost:8501"  # Streamlit root path

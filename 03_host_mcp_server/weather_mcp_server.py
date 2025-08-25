@@ -1,7 +1,7 @@
-from mcp.server.fastmcp import FastMCP
 import random
+from mcp.server.fastmcp import FastMCP 
 
-mcp = FastMCP(host="0.0.0.0", stateless_http=True)
+mcp = FastMCP(host="0.0.0.0", stateless_http=True)  
 
 @mcp.tool()
 def get_weather(city: str) -> str:
@@ -20,5 +20,5 @@ def get_forecast(city: str, days: int = 3) -> str:
     condition = random.choice(conditions)
     return f"{days}-day forecast for {city}: Mostly {condition} with temperatures ranging {min_temp}-{max_temp}°C"
 
-if __name__ == "__main__":
+if __name__ == "__main__": 
     mcp.run(transport="streamable-http")

@@ -28,7 +28,7 @@ the agent file is identical as [travel_agent_standalone.py](./travel_agent_stand
 # setup env variables
 export AWS_REGION=eu-central-1
 export ENTRA_TENANT_ID=[Entra Tenant ID]
-export ENTRA_AUDIENCE=[Entra Application (client) ID]
+export ENTRA_CLIENT_ID=[Entra Application (client) ID]
 export ENTRA_CLIENT_SECRET=[Entra Application Secret]
 export ENTRA_DISCOVERY_URL=https://login.microsoftonline.com/${ENTRA_TENANT_ID}/v2.0/.well-known/openid-configuration
 

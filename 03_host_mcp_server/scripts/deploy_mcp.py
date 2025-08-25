@@ -6,10 +6,10 @@ from boto3.session import Session
 def main():
     # Load configuration from environment variables
     discovery_url = os.getenv("ENTRA_DISCOVERY_URL")
-    audience = os.getenv("ENTRA_CLIENT_ID")
+    audience = os.getenv("ENTRA_CLIENT_ID_MCP")
     
     if not discovery_url or not audience:
-        raise ValueError("ENTRA_DISCOVERY_URL and ENTRA_CLIENT_ID environment variables must be set")
+        raise ValueError("ENTRA_DISCOVERY_URL and ENTRA_CLIENT_ID_MCP environment variables must be set")
     
     # Get AWS region from environment variable, default to eu-central-1 if not set
     region = os.getenv("AWS_REGION", "eu-central-1")
@@ -19,12 +19,13 @@ def main():
     agentcore_runtime = Runtime()
     
     response = agentcore_runtime.configure(
-        entrypoint="travel_agent_standalone.py",
+        protocol="MCP",
+        entrypoint="weather_mcp_server.py",
         auto_create_execution_role=True,
         auto_create_ecr=True,
         requirements_file="requirements.txt",
         region=region,
-        agent_name="travel_agent_inbound_authn",
+        agent_name="weather_mcp_server",
         authorizer_configuration={
             "customJWTAuthorizer": {
                 "discoveryUrl": discovery_url,
@@ -35,11 +36,11 @@ def main():
     
     print("Configuration response:", response)
     
-    # Deploy the agent
+    # Deploy the mcp
     launch_result = agentcore_runtime.launch()
     print("Launch result:", launch_result)
     
-    # Save agent ARN to file
+    # Save mcp ARN to file
     if hasattr(launch_result, 'agent_arn') and launch_result.agent_arn:
         script_dir = os.path.dirname(os.path.abspath(__file__))
         agent_arn_path = os.path.join(script_dir, '.agent_arn')
