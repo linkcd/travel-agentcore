@@ -49,7 +49,41 @@ Deploy a weather MCP server using Amazon Bedrock AgentCore Runtime with Microsof
 
 
 
+## 🛠️ Project Setup
+
+### Prerequisites
+- AWS Account with appropriate permissions
+- Python 3.8+ environment
+- Docker (for local builds)
+- Git
+
+### Initial Setup
+
+1. **Clone the Repository**
+   ```bash
+   git clone <repository-url>
+   cd travel-agentcore
+   ```
+
+2. **Create and Activate Python Virtual Environment**
+   ```bash
+   python -m venv .venv
+   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+   ```
+
+3. **Install Dependencies**
+   ```bash
+   pip install -r requirements.txt
+   ```
+   
+   This installs all packages needed for deployment and testing scripts across all examples.
+
 ## 🚀 Getting Started
+
+1. **Prerequisites**
+   - Complete the Project Setup above
+
+2. **Choose Your Starting Point**
    - New to AgentCore? Start with [Example 01](./01_agent_standalone/)
    - Need authentication? Jump to [Example 02](./02_agent_inbound_authn/)
    - Want host MCP server in the cloud? Try [Example 03](./03_host_mcp_server/)
