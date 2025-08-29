@@ -24,41 +24,29 @@ the agent file is identical as [travel_agent_standalone.py](./travel_agent_stand
 [Deployment script](./scripts/deploy_agent.py)
 
 ## 4. Build and Deploy to AWS
-```bash
-# setup env variables
-export AWS_REGION=eu-central-1
-export ENTRA_TENANT_ID=[Entra Tenant ID]
-export ENTRA_CLIENT_ID=[Entra Application (client) ID]
-export ENTRA_CLIENT_SECRET=[Entra Application Secret]
-export ENTRA_DISCOVERY_URL=https://login.microsoftonline.com/${ENTRA_TENANT_ID}/v2.0/.well-known/openid-configuration
 
-# build and deploy the agent
-python ./scripts/deploy_agent.py
-# after the deployment, the deployed agent ARN is saved to ./scripts/.agent_arn file
-```
+1. **Setup Environment Variables**
+   ```bash
+   # Copy the example file and update with your values
+   cp .env.example .env
+   # Edit .env file with your Entra ID configuration
+   ```
+
+2. **Build and Deploy Agent**
+   ```bash
+   # Build and deploy agent
+   python ./scripts/deploy_agent.py
+   # The deployed agent ARN is automatically saved to .env file
+   ```
 
 ## 5. End User Authentication and Invoke the agent 
 
-### Option 1: Authentication Code Flow - Streamlit App
+### Streamlit App - Using Authentication Code Flow
 ```bash
-# 1. Load environment variables for agent integration
-source ./scripts/.agent_arn
-
-# 2. Run the Streamlit chat application
+# Run the Streamlit chat application (environment variables loaded automatically)
 streamlit run client_app/app.py
 ```
 
-### Option 2: Device Code Flow - Command Line
-```bash
-# 1. Use Device Code flow to get bearer token from Entra ID  
-python ./scripts/user_auth.py
-# Now the auth code is saved to ./scripts/.auth_token file
-
-# 2. Load the token value and agent ARN, then invoke the agent 
-source ./scripts/.auth_token
-source ./scripts/.agent_arn
-python ./scripts/invoke_agent.py
-```
 
 ## JWT Example
 ```json

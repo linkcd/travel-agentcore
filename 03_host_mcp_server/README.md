@@ -17,27 +17,35 @@ As MCP only supports OAuth, we need to configure the authentication as OAuth as 
 
 In addition, set the protocol to "MCP" during configuration to tell AgentCore that this is a MCP server.
 
-```bash
-export AWS_REGION=eu-central-1
-export ENTRA_TENANT_ID=[Entra Tenant ID]
-export ENTRA_CLIENT_ID=[Entra Application (client) ID for MCP]
-export ENTRA_DISCOVERY_URL=https://login.microsoftonline.com/${ENTRA_TENANT_ID}/v2.0/.well-known/openid-configuration
+1. **Setup Environment Variables**
+   ```bash
+   # Copy the example file and update with your values
+   cp .env.example .env
+   # Edit .env file with your Entra ID configuration
+   ```
 
-# Build and deploy MCP
-python ./scripts/deploy_mcp.py
-# after the deployment, the deployed mcp ARN is saved to ./scripts/.agent_arn file
-```
+2. **Build and Deploy MCP**
+   ```bash
+   # Build and deploy MCP
+   python ./scripts/deploy_mcp.py
+   # The deployed agent ARN is automatically saved to .env file
+   ```
 
 ### Invoke the MCP server
 We will have to generate bearer token to invoke the mcp server.
-### Option 2: Device Code Flow - Command Line
+
+**Using Device Code Flow**
 ```bash
 # 1. Use Device Code flow to get bearer token from Entra ID against MCP application
 python ./scripts/user_auth.py
-# Now the auth code is saved to ./scripts/.auth_token file
+# The auth token is automatically saved to .env file
 
-# 2. Load the token value and agent ARN, then invoke the agent 
-source ./scripts/.auth_token
-source ./scripts/.agent_arn
+# 2. Invoke the MCP server (environment variables loaded automatically)
 python ./scripts/invoke_mcp.py
 ```
+
+**Benefits of .env approach:**
+- No manual sourcing of environment files
+- Automatic loading of all environment variables
+- Single source of truth for configuration
+- Better error handling and validation

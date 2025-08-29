@@ -2,23 +2,23 @@ import requests
 import urllib.parse
 import json
 import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Configuration Constants
-REGION_NAME = "eu-central-1"
+REGION_NAME = os.getenv('AWS_REGION', 'eu-central-1')
 
 # === Agent Invocation Demo ===
 # Validate required environment variables
 invoke_agent_arn = os.environ.get('AGENT_ARN')
 auth_token = os.environ.get('AUTH_TOKEN')
 
-if not invoke_agent_arn:
-    print("❌ Error: AGENT_ARN environment variable is not set")
-    print("📝 Please run: source ./scripts/.agent_arn")
-    exit(1)
-
-if not auth_token:
-    print("❌ Error: AUTH_TOKEN environment variable is not set")
-    print("📝 Please run: source ./scripts/.auth_token")
+if not invoke_agent_arn or not auth_token:
+    print("❌ Error: Required environment variables not set")
+    print("📝 Please ensure AGENT_ARN and AUTH_TOKEN are set in .env file")
+    print("📝 Run: python ./scripts/deploy_agent.py && python ./scripts/user_auth.py")
     exit(1)
 
 # URL encode the agent ARN

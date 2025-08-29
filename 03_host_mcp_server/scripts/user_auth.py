@@ -2,9 +2,18 @@
 import os
 import time
 import requests
+from dotenv import load_dotenv
 from jose import jwt
 from jose.backends.rsa_backend import RSAKey
 
+# Load environment variables from .env file
+load_dotenv()
+
+# Validate required environment variables
+if not os.environ.get("ENTRA_TENANT_ID"):
+    raise ValueError("ENTRA_TENANT_ID environment variable is not set")
+if not os.environ.get("ENTRA_CLIENT_ID_MCP"):
+    raise ValueError("ENTRA_CLIENT_ID_MCP environment variable is not set")
 
 TENANT_ID = os.environ["ENTRA_TENANT_ID"]
 CLIENT_ID = os.environ["ENTRA_CLIENT_ID_MCP"]
@@ -97,25 +106,61 @@ while True:
             print(id_token)
             
             
-            # --- Export to shell ---
-            script_dir = os.path.dirname(os.path.abspath(__file__))
-            auth_token_path = os.path.join(script_dir, '.auth_token')
-            with open(auth_token_path, 'w') as f:
-                f.write(f'export AUTH_TOKEN="{id_token}"\n')
+            # --- Save to .env file ---
+            env_path = '.env'
             
-            print("\n✅ Token added to environment variable AUTH_TOKEN")
-            print(f"\n📝 To use in your shell, run: source {auth_token_path}")
+            # Read existing .env content
+            env_lines = []
+            if os.path.exists(env_path):
+                with open(env_path, 'r') as f:
+                    env_lines = f.readlines()
+            
+            # Update or add AUTH_TOKEN
+            updated = False
+            for i, line in enumerate(env_lines):
+                if line.startswith('AUTH_TOKEN='):
+                    env_lines[i] = f'AUTH_TOKEN={id_token}\n'
+                    updated = True
+                    break
+            
+            if not updated:
+                env_lines.append(f'AUTH_TOKEN={id_token}\n')
+            
+            # Write back to .env file
+            with open(env_path, 'w') as f:
+                f.writelines(env_lines)
+            
+            print("\n✅ Token saved to .env file")
             print(f"\n🔑 Token: {id_token[:50]}...")
 
         except Exception as e:
             print("\n❌ ID Token verification FAILED")
             print("Reason:", str(e))
-            # Still export the token even if verification fails
-            script_dir = os.path.dirname(os.path.abspath(__file__))
-            auth_token_path = os.path.join(script_dir, '.auth_token')
-            with open(auth_token_path, 'w') as f:
-                f.write(f'export AUTH_TOKEN="{id_token}"\n')
-            print(f"\n📝 Token exported to {auth_token_path} (run: source {auth_token_path})")
+            # Still save the token even if verification fails
+            env_path = '.env'
+            
+            # Read existing .env content
+            env_lines = []
+            if os.path.exists(env_path):
+                with open(env_path, 'r') as f:
+                    env_lines = f.readlines()
+            
+            # Update or add AUTH_TOKEN
+            updated = False
+            for i, line in enumerate(env_lines):
+                if line.startswith('AUTH_TOKEN='):
+                    env_lines[i] = f'AUTH_TOKEN={id_token}\n'
+                    updated = True
+                    break
+            
+            if not updated:
+                env_lines.append(f'AUTH_TOKEN={id_token}\n')
+            
+            # Write back to .env file
+            with open(env_path, 'w') as f:
+                f.writelines(env_lines)
+            
+            print(f"\n📝 Token saved to .env file")
 
         break
 

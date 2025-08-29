@@ -104,6 +104,7 @@ celerybeat.pid
 
 # Environments
 .env
+.env.dev
 .venv
 env/
 venv/
@@ -173,5 +174,5 @@ Thumbs.db
 # Logs
 *.log
 logs/
-*.agent_arn
-*.env.dev
+
+

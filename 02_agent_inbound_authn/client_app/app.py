@@ -5,11 +5,25 @@ import secrets
 import base64
 import json
 import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Azure AD configuration from environment variables
-CLIENT_ID = os.getenv('ENTRA_CLIENT_ID')  
-CLIENT_SECRET = os.getenv('ENTRA_CLIENT_SECRET')  # Add this env var if needed
+# Validate required Azure AD configuration
+CLIENT_ID = os.getenv('ENTRA_CLIENT_ID')
+if not CLIENT_ID:
+    raise ValueError("ENTRA_CLIENT_ID environment variable is not set")
+
+CLIENT_SECRET = os.getenv('ENTRA_CLIENT_SECRET')  
+if not CLIENT_SECRET:
+    raise ValueError("ENTRA_CLIENT_SECRET environment variable is not set")
+
 TENANT_ID = os.getenv('ENTRA_TENANT_ID')
+if not TENANT_ID:
+    raise ValueError("ENTRA_TENANT_ID environment variable is not set")
+
 REDIRECT_URI = "http://localhost:8501"  # Streamlit root path
 
 def get_auth_url():

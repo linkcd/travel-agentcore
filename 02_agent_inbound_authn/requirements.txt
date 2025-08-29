@@ -2,8 +2,3 @@ strands-agents
 strands-agents-tools
 
 bedrock-agentcore
-bedrock-agentcore-starter-toolkit
-
-# for calling the agent
-boto3
-python-jose[cryptography]

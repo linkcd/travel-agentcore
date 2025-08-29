@@ -2,26 +2,28 @@ import asyncio
 import os
 import sys
 from datetime import timedelta
+from dotenv import load_dotenv
 
 from mcp import ClientSession
 from mcp.client.streamable_http import streamablehttp_client
 
+# Load environment variables from .env file
+load_dotenv()
+
 async def main():
-    agent_arn = os.getenv('AGENT_ARN')
-    auth_token = os.getenv('AUTH_TOKEN')
     region = os.getenv('AWS_REGION', 'eu-central-1')
 
-    if not agent_arn:
-        print("❌ Error: AGENT_ARN environment variable is not set")
-        print("📝 Please run: source ./scripts/.agent_arn")
-        sys.exit(1)
+    mcp_arn = os.getenv('MCP_ARN')
+    auth_token = os.getenv('AUTH_TOKEN')
     
+    if not mcp_arn:
+        print("❌ Error: MCP_ARN environment variable is not set")
+        sys.exit(1)
     if not auth_token:
-        print("❌ Error: AUTH_TOKEN environment variable is not set")
-        print("📝 Please run: source ./scripts/.auth_token")
-        sys.exit(1)
-    
-    encoded_arn = agent_arn.replace(':', '%3A').replace('/', '%2F')
+        print("❌ Error: AUTH_TOKEN environment variable is not set") 
+        sys.exit(1)    
+
+    encoded_arn = mcp_arn.replace(':', '%3A').replace('/', '%2F')
     mcp_url = f"https://bedrock-agentcore.{region}.amazonaws.com/runtimes/{encoded_arn}/invocations?qualifier=DEFAULT"
     headers = {
         "authorization": f"Bearer {auth_token}",
