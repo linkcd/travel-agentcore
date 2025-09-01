@@ -25,12 +25,12 @@ def main():
     agentcore_runtime = Runtime()
     
     response = agentcore_runtime.configure(
-        entrypoint="travel_agent_standalone.py",
+        entrypoint="travel_agent_calls_mcp.py",
         auto_create_execution_role=True,
         auto_create_ecr=True,
         requirements_file="requirements.txt",
         region=region,
-        agent_name="travel_agent_inbound_authn",
+        agent_name="travel_agent_calls_mcp",
         authorizer_configuration={
             "customJWTAuthorizer": {
                 "discoveryUrl": discovery_url,

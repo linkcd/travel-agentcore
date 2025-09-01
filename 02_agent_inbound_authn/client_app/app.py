@@ -12,29 +12,34 @@ load_dotenv()
 
 # Azure AD configuration from environment variables
 # Validate required Azure AD configuration
-CLIENT_ID = os.getenv('ENTRA_CLIENT_ID')
-if not CLIENT_ID:
-    raise ValueError("ENTRA_CLIENT_ID environment variable is not set")
+AGENT_ENTRA_CLIENT_ID = os.getenv('AGENT_ENTRA_CLIENT_ID')
+if not AGENT_ENTRA_CLIENT_ID:
+    raise ValueError("AGENT_ENTRA_CLIENT_ID environment variable is not set")
 
-CLIENT_SECRET = os.getenv('ENTRA_CLIENT_SECRET')  
-if not CLIENT_SECRET:
-    raise ValueError("ENTRA_CLIENT_SECRET environment variable is not set")
+STEAMLIT_ENTRA_CLIENT_ID = os.getenv('STEAMLIT_ENTRA_CLIENT_ID')
+if not STEAMLIT_ENTRA_CLIENT_ID:
+    raise ValueError("STEAMLIT_ENTRA_CLIENT_ID environment variable is not set")
+
+STEAMLIT_ENTRA_CLIENT_SECRET = os.getenv('STEAMLIT_ENTRA_CLIENT_SECRET')  
+if not STEAMLIT_ENTRA_CLIENT_SECRET:
+    raise ValueError("STEAMLIT_ENTRA_CLIENT_SECRET environment variable is not set")
 
 TENANT_ID = os.getenv('ENTRA_TENANT_ID')
 if not TENANT_ID:
     raise ValueError("ENTRA_TENANT_ID environment variable is not set")
 
 REDIRECT_URI = "http://localhost:8501"  # Streamlit root path
+SCOPE = f'openid profile email offline_access api://{AGENT_ENTRA_CLIENT_ID}/read'
 
 def get_auth_url():
     state = secrets.token_urlsafe(32)
     st.session_state.oauth_state = state
     
     params = {
-        'client_id': CLIENT_ID,
+        'client_id': STEAMLIT_ENTRA_CLIENT_ID,
         'response_type': 'code',
         'redirect_uri': REDIRECT_URI,
-        'scope': 'openid profile email offline_access',
+        'scope': SCOPE,
         'state': state,
         'response_mode': 'query'
     }
@@ -50,11 +55,12 @@ def exchange_code_for_token(code, state):
     token_url = f"https://login.microsoftonline.com/{TENANT_ID}/oauth2/v2.0/token"
     
     data = {
-        'client_id': CLIENT_ID,
-        'client_secret': CLIENT_SECRET,
+        'client_id': STEAMLIT_ENTRA_CLIENT_ID,
+        'client_secret': STEAMLIT_ENTRA_CLIENT_SECRET,
         'code': code,
         'grant_type': 'authorization_code',
         'redirect_uri': REDIRECT_URI,
+        'scope': SCOPE
     }
     
     response = requests.post(token_url, data=data)
@@ -156,7 +162,7 @@ if st.session_state.get('authenticated', False):
     # Top navigation
     col1, col2, col3 = st.columns([2, 3, 1])
     with col1:
-        if st.button("Show ID Token"):
+        if st.button("Show Tokens"):
             st.session_state.show_token = True
     with col2:
         st.write(f"Welcome, {user_name}")
@@ -169,15 +175,29 @@ if st.session_state.get('authenticated', False):
     
     # Token popup
     if st.session_state.get('show_token', False):
-        with st.expander("ID Token Details", expanded=True):
+        with st.expander("Token Details", expanded=True):
+            # ID Token Section
             if id_token:
-                st.subheader("Raw ID Token (JWT):")
-                st.code(id_token, language="text")
+                st.subheader("ID Token")
+                st.text("Encoded (JWT):")
+                st.text_area("ID Token (click to select all)", id_token, height=100, key="id_token_encoded")
                 
                 payload = decode_jwt_payload(id_token)
                 if payload:
-                    st.subheader("Decoded ID Token Payload:")
-                    st.json(payload)
+                    st.text("Decoded Payload:")
+                    st.text_area("ID Token Payload (click to select all)", json.dumps(payload, indent=2), height=200, key="id_token_decoded")
+            
+            # Access Token Section
+            access_token = st.session_state.get('access_token')
+            if access_token:
+                st.subheader("Access Token")
+                st.text("Encoded (JWT):")
+                st.text_area("Access Token (click to select all)", access_token, height=100, key="access_token_encoded")
+                
+                access_payload = decode_jwt_payload(access_token)
+                if access_payload:
+                    st.text("Decoded Payload:")
+                    st.text_area("Access Token Payload (click to select all)", json.dumps(access_payload, indent=2), height=200, key="access_token_decoded")
             
             if st.button("Close"):
                 st.session_state.show_token = False
@@ -206,7 +226,8 @@ if st.session_state.get('authenticated', False):
         # Call agent and add response
         with st.chat_message("assistant"):
             with st.spinner("Thinking..."):
-                agent_response = call_agent(prompt, id_token)
+                access_token = st.session_state.get('access_token')
+                agent_response = call_agent(prompt, access_token)
             
             if isinstance(agent_response, dict) and "error" in agent_response:
                 response = f"Sorry, I encountered an error: {agent_response['error']}"

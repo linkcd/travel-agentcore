@@ -3,12 +3,15 @@ THis is a weather MCP server, running an AgentCore as a MCP for (dummy) weather 
 Document: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-mcp.html 
 
 
-## Create Entra App for Weather MCP
-Create the Entra App
-Configure your Azure AD app as a public client:
-- Go to Azure Portal → App registrations → Your app 
-- Navigate to "Authentication"
-- Set "Allow public client flows" to "Yes"
+## Create Entra ID App registration for Weather MCP
+1. Create a new Entra ID application registration for Weather MCP
+- Follow the exact steps of [Step 1.1](/02_agent_inbound_authn/README.md)
+
+2. Enforce to use V2 endpoint as [Step 1.2](/02_agent_inbound_authn/README.md)
+
+3. It should be multi-tenant 
+4. Enable Allow public client flow as we are going to test MCP server with Device Code Flow 
+
 
 Take notes of tenant ID and MCP Entra Application (client) ID
 

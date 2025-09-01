@@ -12,11 +12,11 @@ load_dotenv()
 # Validate required environment variables
 if not os.environ.get("ENTRA_TENANT_ID"):
     raise ValueError("ENTRA_TENANT_ID environment variable is not set")
-if not os.environ.get("ENTRA_CLIENT_ID_MCP"):
-    raise ValueError("ENTRA_CLIENT_ID_MCP environment variable is not set")
+if not os.environ.get("AGENT_ENTRA_CLIENT_ID"):
+    raise ValueError("AGENT_ENTRA_CLIENT_ID environment variable is not set")
 
 TENANT_ID = os.environ["ENTRA_TENANT_ID"]
-CLIENT_ID = os.environ["ENTRA_CLIENT_ID_MCP"]
+CLIENT_ID = os.environ["AGENT_ENTRA_CLIENT_ID"]
 
 DEVICE_CODE_URL = f"https://login.microsoftonline.com/{TENANT_ID}/oauth2/v2.0/devicecode"
 TOKEN_URL = f"https://login.microsoftonline.com/{TENANT_ID}/oauth2/v2.0/token"
