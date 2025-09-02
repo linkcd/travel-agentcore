@@ -22,11 +22,12 @@ SCOPES = [f"api://a1945aaf-db68-4f7e-8074-b79922b0e735/read"]
 mcp_url = "https://bedrock-agentcore.eu-central-1.amazonaws.com/runtimes/arn%3Aaws%3Abedrock-agentcore%3Aeu-central-1%3A548129671048%3Aruntime%2Fweather_mcp_server-sxP7oW85Im/invocations?qualifier=DEFAULT"
 MODEL_ID = "eu.anthropic.claude-sonnet-4-20250514-v1:0"
 
-MCP_ACCESS_TOKEN = ""
+MCP_ACCESS_TOKEN = None
+auth_url_holder = {"url": None}
 
 async def on_auth_url(url: str):
     print(f"Authorization url: {url}")
-    await queue.put(f"Authorization url: {url}")
+    auth_url_holder["url"] = url
 
 # Create MCP client inside entrypoint where workload token is available
 @requires_access_token(
@@ -40,7 +41,6 @@ async def need_mcp_access_token(*, access_token: str):
     global MCP_ACCESS_TOKEN
     MCP_ACCESS_TOKEN = access_token
     print("MCP Access token acquired")
-    print(access_token)
     return access_token
 
 
@@ -62,101 +62,123 @@ class StreamingQueue:
     async def stream(self):
         while True:
             item = await self.queue.get()
-            if item is None and self.finished:
-                break
+            if item is None:
+                if self.finished:
+                    break
+                continue
             yield item
 
 queue = StreamingQueue()
 
 @app.entrypoint
 async def agent_invocation(payload):
-    await queue.put("Begin agent execution")
+    async def stream_response():
+        user_message = payload.get("prompt", "No prompt found in input")
+        if not user_message or user_message == "No prompt found in input":
+            yield "❌ No valid prompt provided"
+            return
 
-    # try to initialize MCP client
-    try:
-        mcp_client = MCPClient(
-            lambda: streamablehttp_client(
-                url=mcp_url, 
-                # Get pat token from here: https://github.com/settings/personal-access-tokens
-                headers={"Authorization": f"Bearer {MCP_ACCESS_TOKEN}"}
-            )
-        )
-                
-        user_message = payload.get("prompt", "No prompt found in input, please guide customer to create a json payload with prompt key")
-
-        # Use MCP client within context manager
-        print("Log: Entering MCP client context manager (first attempt)...")
-        with mcp_client:
-            print("Log: Inside MCP client context, listing tools (first attempt)...")
-            mcp_tools = mcp_client.list_tools_sync()
-            print(f"Log: Found {len(mcp_tools)} tools (first attempt)")
-            agent = Agent(tools=mcp_tools, model=MODEL_ID)
-            print("Log: Calling agent with user message (first attempt)...")
-            response = agent(user_message)
-            print(f"Agent response: {response.message}")
+        yield "- 🚀 Starting travel agent"
+        yield f"- 📝 Processing request: {user_message[:50]}{'...' if len(user_message) > 50 else ''}"
         
-        await queue.put(response.message)
-        await queue.put("End agent execution")
-        
-    except Exception as e:
-        error_info = {
-            "error": str(e),
-            "error_type": type(e).__name__,
-            "error_details": traceback.format_exc(),
-            "timestamp": datetime.datetime.now().isoformat()
-        }
-        is_auth_error = IsMCPAuthenticationError(error_info)
-        print(f"Error: {json.dumps(error_info, indent=2)}")
-
-        if is_auth_error:
-            print("Log: Authentication required for MCP Server. Starting authorization flow...")
-            await queue.put("Authentication required for MCP Server. Starting authorization flow...")
-            try:
-                global MCP_ACCESS_TOKEN
-                MCP_ACCESS_TOKEN = await need_mcp_access_token(access_token="")
-                print("Log: Authentication successful! Retrying MCP client init...")
-                await queue.put("Authentication successful! Retrying MCP client init...")
-
-                # try to initialize MCP client again
-                print(f"Log: Creating MCP client with token: {MCP_ACCESS_TOKEN}...")
-                mcp_client = MCPClient(
-                    lambda: streamablehttp_client(
-                        url=mcp_url, 
-                        headers={"Authorization": f"Bearer {MCP_ACCESS_TOKEN}"}
-                    )
+        try:
+            yield "- 🔗 Connecting to weather service"
+            
+            global MCP_ACCESS_TOKEN
+            mcp_client = MCPClient(
+                lambda: streamablehttp_client(
+                    url=mcp_url, 
+                    headers={"Authorization": f"Bearer {MCP_ACCESS_TOKEN}"}
                 )
+            )
+            
+            yield "- 🔍 Discovering available tools"
+            
+            with mcp_client:
+                mcp_tools = mcp_client.list_tools_sync()
+                yield f"- ✅ Found {len(mcp_tools)} tools"
+                yield "- 🤖 Initializing AI agent"
+                yield "- 💭 Processing your request"
+                
+                agent = Agent(tools=mcp_tools, model=MODEL_ID)
+                response = agent(user_message)
+                
+                # Extract clean response text
+                if hasattr(response, 'message') and isinstance(response.message, dict):
+                    if 'content' in response.message and isinstance(response.message['content'], list):
+                        clean_response = response.message['content'][0].get('text', str(response.message))
+                    else:
+                        clean_response = str(response.message)
+                else:
+                    clean_response = str(response.message)
+                
+                yield "---"  # Separator
+                yield f"**Answer:** {clean_response}"
+            
+        except Exception as e:
+            error_info = {
+                "error": str(e),
+                "error_type": type(e).__name__,
+                "timestamp": datetime.datetime.now().isoformat()
+            }
+            
+            global MCP_ACCESS_TOKEN
+            if "client initialization failed" in str(e).lower() or IsMCPAuthenticationError(error_info) or not MCP_ACCESS_TOKEN:
+                yield "- 🔐 Authentication required"
+                yield "- 🔑 Requesting access permissions"
+                
+                try:
+                    # Start the auth process
+                    auth_task = asyncio.create_task(need_mcp_access_token(access_token=""))
                     
-                user_message = payload.get("prompt", "No prompt found in input, please guide customer to create a json payload with prompt key")
+                    # Wait a moment for the auth URL to be set
+                    await asyncio.sleep(1)
+                    
+                    if auth_url_holder["url"]:
+                        yield f"- 🔗 **Please click this link to authorize:** {auth_url_holder['url']}"
+                        yield "- ⏳ Waiting for you to complete authorization..."
+                    
+                    MCP_ACCESS_TOKEN = await asyncio.wait_for(auth_task, timeout=300)
+                    
+                    yield "- ✅ Authentication successful"
+                    yield "- 🔗 Reconnecting to weather service"
+                    yield "- 🔍 Rediscovering tools"
 
-                # Use MCP client within context manager
-                print("Log: Entering MCP client context manager...")
-                with mcp_client:
-                    print("Log: Inside MCP client context, listing tools...")
-                    mcp_tools = mcp_client.list_tools_sync()
-                    print(f"Log: Found {len(mcp_tools)} tools")
-                    agent = Agent(tools=mcp_tools, model=MODEL_ID)
-                    print("Log: Calling agent with user message...")
-                    response = agent(user_message)
-                    print(f"Agent response after re-authentication: {response.message}")
-
-                await queue.put(response.message)
-                await queue.put("End agent execution after re-authentication")
-            except Exception as e2:
-                error_info2 = {
-                    "error": str(e2),
-                    "error_type": type(e2).__name__,
-                    "error_details": traceback.format_exc(),
-                    "timestamp": datetime.datetime.now().isoformat()
-                }
-                print(f"Error during re-authentication or MCP client init: {json.dumps(error_info2, indent=2)}")
-                await queue.put(f"❌ Error during re-authentication or MCP client init: {json.dumps(error_info2, indent=2)}")
-
-    # Return the stream
-    async def stream_results():
-        async for item in queue.stream():
-            yield item
+                    mcp_client = MCPClient(
+                        lambda: streamablehttp_client(
+                            url=mcp_url, 
+                            headers={"Authorization": f"Bearer {MCP_ACCESS_TOKEN}"}
+                        )
+                    )
+                    
+                    with mcp_client:
+                        mcp_tools = mcp_client.list_tools_sync()
+                        yield f"- ✅ Reconnected! Found {len(mcp_tools)} tools"
+                        yield "- 💭 Processing your request"
+                        
+                        agent = Agent(tools=mcp_tools, model=MODEL_ID)
+                        response = agent(user_message)
+                        
+                        # Extract clean response text
+                        if hasattr(response, 'message') and isinstance(response.message, dict):
+                            if 'content' in response.message and isinstance(response.message['content'], list):
+                                clean_response = response.message['content'][0].get('text', str(response.message))
+                            else:
+                                clean_response = str(response.message)
+                        else:
+                            clean_response = str(response.message)
+                        
+                        yield "---"  # Separator
+                        yield f"**Answer:** {clean_response}"
+                        
+                except asyncio.TimeoutError:
+                    yield "⏰ Authorization timed out. Please try again."
+                except Exception as e2:
+                    yield f"❌ Authentication failed: {str(e2)}"
+            else:
+                yield f"❌ Service error: {str(e)}"
     
-    return stream_results()
+    return stream_response()
 
 if __name__ == "__main__":
     app.run()
