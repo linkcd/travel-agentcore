@@ -44,7 +44,7 @@ auth_state = AuthState()
     provider_name="fabeldyr-entra-mcp-provider",
     scopes=SCOPES,
     auth_flow='USER_FEDERATION',
-    on_auth_url=lambda url: auth_state.set_auth_url(url),
+    on_auth_url=auth_state.set_auth_url,
     force_authentication=True,
 )
 async def acquire_mcp_access_token(*, access_token: str) -> str:
@@ -93,8 +93,7 @@ async def process_with_mcp(user_message: str) -> AsyncGenerator[str, None]:
     with mcp_client:
         mcp_tools = mcp_client.list_tools_sync()
         yield f"- ✅ Found {len(mcp_tools)} tools in MCP server"
-        yield "- 🤖 Initializing agent with tools from MCP server..."
-        
+        yield "- 🤖 Initializing agent with MCP tools and processing your request..."        
         agent = Agent(tools=mcp_tools, model=MODEL_ID)
         response = agent(user_message)
         
@@ -103,17 +102,18 @@ async def process_with_mcp(user_message: str) -> AsyncGenerator[str, None]:
 
 async def handle_authentication(user_message: str) -> AsyncGenerator[str, None]:
     """Handle MCP authentication flow"""
-    yield "- 🔐 Authentication for MCP server required"
-    
+    yield "- 🔐 Attempting to authenticate with MCP server - checking for cached token (take a few seconds) or requesting user authorization..."    
     try:
         auth_task = asyncio.create_task(acquire_mcp_access_token(access_token=""))
-        await asyncio.sleep(3)  # Wait for fetching cached token and auth url
-        
+        # AgentCore python sdk default poll interval is 5 sec. Wait for 7sec fetching cached token and auth url
+        # https://github.com/aws/bedrock-agentcore-sdk-python/blob/3093768aa8600509c3bbba899123d78a6a1fedcb/src/bedrock_agentcore/services/identity.py#L25C1-L25C37
+        await asyncio.sleep(7) 
+
         if auth_state.access_token:
             yield "- ✅ Cached access token found, proceeding with request..."
         else:
             # no cached access token available, user interaction needed
-            yield f"- 🔗 **Please click this link to authorize MCP server:** {auth_state.auth_url}"
+            yield f"- 🔗 **No access token found. Please click this link to login and authorize MCP server:** {auth_state.auth_url}"            
             yield "- ⏳ Waiting for you to complete authorization..."
             await asyncio.wait_for(auth_task, timeout=300) # Wait for user to complete authentication
         

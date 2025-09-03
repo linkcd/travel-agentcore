@@ -4,6 +4,8 @@ import urllib.parse
 import json
 import os
 from dotenv import load_dotenv
+import uuid
+from datetime import datetime
 from auth_helper import AuthHelper, JWTHelper, Config
 
 # Load .env
@@ -27,7 +29,8 @@ def call_agent_stream(prompt, auth_token):
         headers = {
             "Authorization": f"Bearer {auth_token}",
             "X-Amzn-Trace-Id": "streamlit-chat-trace",
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            "X-Amzn-Bedrock-AgentCore-Runtime-Session-Id": st.session_state.active_session_id
         }
         
         response = requests.post(
@@ -95,19 +98,93 @@ def render_token_details():
                 st.session_state.show_token = False
                 st.rerun()
 
+def init_chat_sessions():
+    """Initialize chat sessions in session state"""
+    if "chat_sessions" not in st.session_state:
+        st.session_state.chat_sessions = {}
+    if "active_session_id" not in st.session_state:
+        # Create first session
+        session_id = str(uuid.uuid4())
+        st.session_state.chat_sessions[session_id] = {
+            "id": session_id,
+            "name": session_id,
+            "messages": [],
+            "created_at": datetime.now()
+        }
+        st.session_state.active_session_id = session_id
+
+def create_new_session():
+    """Create a new chat session"""
+    session_id = str(uuid.uuid4())
+    st.session_state.chat_sessions[session_id] = {
+        "id": session_id,
+        "name": session_id,
+        "messages": [],
+        "created_at": datetime.now()
+    }
+    st.session_state.active_session_id = session_id
+
+def delete_session(session_id):
+    """Delete a chat session"""
+    if len(st.session_state.chat_sessions) > 1:
+        del st.session_state.chat_sessions[session_id]
+        if st.session_state.active_session_id == session_id:
+            st.session_state.active_session_id = list(st.session_state.chat_sessions.keys())[0]
+
+def render_sidebar():
+    """Render the chat sessions sidebar"""
+    with st.sidebar:
+        st.header("Chat Sessions")
+        
+        # New chat button
+        if st.button("➕ New Chat", use_container_width=True):
+            if "creating_session" not in st.session_state:
+                st.session_state.creating_session = True
+                create_new_session()
+                st.rerun()
+        
+        # Reset creation flag
+        if "creating_session" in st.session_state:
+            del st.session_state.creating_session
+        
+        st.divider()
+        
+        # List all sessions
+        for session_id, session in st.session_state.chat_sessions.items():
+            col1, col2 = st.columns([3, 1])
+            
+            with col1:
+                is_active = session_id == st.session_state.active_session_id
+                button_style = "🔵" if is_active else "⚪"
+                if st.button(f"{button_style} {session['name']}", key=f"session_{session_id}", use_container_width=True):
+                    st.session_state.active_session_id = session_id
+                    st.rerun()
+            
+            with col2:
+                if len(st.session_state.chat_sessions) > 1:
+                    if st.button("🗑️", key=f"delete_{session_id}", help="Delete session"):
+                        delete_session(session_id)
+                        st.rerun()
+
+def get_active_session():
+    """Get the currently active session"""
+    return st.session_state.chat_sessions[st.session_state.active_session_id]
+
 def render_chat_interface():
     """Render the main chat interface"""
-    if "messages" not in st.session_state:
-        st.session_state.messages = []
+    active_session = get_active_session()
+    
+    # Display session name
+    st.subheader(f"💬 {active_session['name']}")
     
     # Display chat messages
-    for message in st.session_state.messages:
+    for message in active_session["messages"]:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
     
     # Chat input
     if prompt := st.chat_input("What can I help you with?"):
-        st.session_state.messages.append({"role": "user", "content": prompt})
+        active_session["messages"].append({"role": "user", "content": prompt})
         with st.chat_message("user"):
             st.markdown(prompt)
         
@@ -121,11 +198,11 @@ def render_chat_interface():
                 if chunk == "---":
                     if log_placeholder and logs:
                         log_placeholder.markdown("\n".join(logs))
-                        st.session_state.messages.append({"role": "assistant", "content": "\n".join(logs)})
+                        active_session["messages"].append({"role": "assistant", "content": "\n".join(logs)})
                 elif chunk.startswith("**Answer:**"):
                     with st.chat_message("assistant"):
                         st.markdown(chunk)
-                    st.session_state.messages.append({"role": "assistant", "content": chunk})
+                    active_session["messages"].append({"role": "assistant", "content": chunk})
                 else:
                     if log_placeholder is None:
                         with st.chat_message("assistant"):
@@ -136,9 +213,12 @@ def render_chat_interface():
             pass
         
         # Final cleanup
-        if log_placeholder and logs and not any(msg.get("content", "").startswith("**Answer:**") for msg in st.session_state.messages[-2:]):
-            log_placeholder.markdown("\n".join(logs))
-            st.session_state.messages.append({"role": "assistant", "content": "\n".join(logs)})
+        try:
+            if log_placeholder and logs and not any(msg.get("content", "").startswith("**Answer:**") for msg in active_session["messages"][-2:]):
+                log_placeholder.markdown("\n".join(logs))
+                active_session["messages"].append({"role": "assistant", "content": "\n".join(logs)})
+        except:
+            pass
 
 def main():
     st.set_page_config(page_title="Chat Assistant", page_icon="💬")
@@ -156,6 +236,12 @@ def main():
     AuthHelper.handle_oauth_callback()
     
     if st.session_state.get('authenticated', False):
+        # Initialize chat sessions
+        init_chat_sessions()
+        
+        # Render sidebar
+        render_sidebar()
+        
         # Top navigation
         col1, col2, col3 = st.columns([2, 3, 1])
         with col1:
