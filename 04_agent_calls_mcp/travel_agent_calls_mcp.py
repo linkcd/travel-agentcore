@@ -1,184 +1,153 @@
 import os
-import datetime  
-import json
 import asyncio
-import traceback
+import logging
+from datetime import datetime, timezone
+from typing import Dict, Any, Optional, AsyncGenerator
 
 from strands import Agent
-from strands import tool
 from bedrock_agentcore.runtime import BedrockAgentCoreApp
 from bedrock_agentcore.identity.auth import requires_access_token
 from strands.tools.mcp.mcp_client import MCPClient
 from mcp.client.streamable_http import streamablehttp_client
 from mcp_auth_helper import IsMCPAuthenticationError
-import json
 
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
+# Environment configuration
 os.environ["STRANDS_OTEL_ENABLE_CONSOLE_EXPORT"] = "true"
 os.environ["OTEL_PYTHON_EXCLUDED_URLS"] = "/ping,/invocations"
 
-# Get MCP client ID from environment
-SCOPES = [f"api://a1945aaf-db68-4f7e-8074-b79922b0e735/read"]
-mcp_url = "https://bedrock-agentcore.eu-central-1.amazonaws.com/runtimes/arn%3Aaws%3Abedrock-agentcore%3Aeu-central-1%3A548129671048%3Aruntime%2Fweather_mcp_server-sxP7oW85Im/invocations?qualifier=DEFAULT"
+# Configuration constants
+SCOPES = [os.getenv("MCP_AUTH_SCOPE", "api://a1945aaf-db68-4f7e-8074-b79922b0e735/read")]
+MCP_URL = os.getenv("MCP_ARN", "https://bedrock-agentcore.eu-central-1.amazonaws.com/runtimes/arn%3Aaws%3Abedrock-agentcore%3Aeu-central-1%3A548129671048%3Aruntime%2Fweather_mcp_server-sxP7oW85Im/invocations?qualifier=DEFAULT")
 MODEL_ID = "eu.anthropic.claude-sonnet-4-20250514-v1:0"
 
-MCP_ACCESS_TOKEN = None
-auth_url_holder = {"url": None}
+class AuthState:
+    """Manages authentication state and URLs"""
+    def __init__(self):
+        self.access_token: Optional[str] = None
+        self.auth_url: Optional[str] = None
+    
+    def set_auth_url(self, url: str) -> None:
+        logger.info("Authorization URL received")
+        self.auth_url = url
+    
+    def set_access_token(self, token: str) -> None:
+        self.access_token = token
+        logger.info("MCP access token acquired")
 
-async def on_auth_url(url: str):
-    print(f"Authorization url: {url}")
-    auth_url_holder["url"] = url
+auth_state = AuthState()
 
-# Create MCP client inside entrypoint where workload token is available
 @requires_access_token(
     provider_name="fabeldyr-entra-mcp-provider",
     scopes=SCOPES,
     auth_flow='USER_FEDERATION',
-    on_auth_url=on_auth_url,
+    on_auth_url=lambda url: auth_state.set_auth_url(url),
     force_authentication=True,
 )
-async def need_mcp_access_token(*, access_token: str):
-    global MCP_ACCESS_TOKEN
-    MCP_ACCESS_TOKEN = access_token
-    print("MCP Access token acquired")
+async def acquire_mcp_access_token(*, access_token: str) -> str:
+    """Acquire MCP access token through OAuth flow"""
+    auth_state.set_access_token(access_token)
     return access_token
 
+def create_mcp_client(access_token: str) -> MCPClient:
+    """Create MCP client with authentication"""
+    return MCPClient(
+        lambda: streamablehttp_client(
+            url=MCP_URL,
+            headers={"Authorization": f"Bearer {access_token}"}
+        )
+    )
 
-# Initialize app and streaming queue
+def extract_response_text(response: Any) -> str:
+    """Extract clean text from agent response"""
+    if hasattr(response, 'message') and isinstance(response.message, dict):
+        if 'content' in response.message and isinstance(response.message['content'], list):
+            return response.message['content'][0].get('text', str(response.message))
+        return str(response.message)
+    return str(response.message)
+
+def is_auth_error(error: Exception) -> bool:
+    """Check if error requires authentication"""
+    error_info = {
+        "error": str(error),
+        "error_type": type(error).__name__,
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
+    return (
+        "client initialization failed" in str(error).lower() or
+        IsMCPAuthenticationError(error_info) or
+        not auth_state.access_token
+    )
+
 app = BedrockAgentCoreApp()
 
-class StreamingQueue:
-    def __init__(self):
-        self.finished = False
-        self.queue = asyncio.Queue()
+async def process_with_mcp(user_message: str) -> AsyncGenerator[str, None]:
+    """Process user message with MCP tools"""
+    yield "- 🔗 Connecting to weather MCP server..."
+    
+    mcp_client = create_mcp_client(auth_state.access_token)
+    
+    with mcp_client:
+        mcp_tools = mcp_client.list_tools_sync()
+        yield f"- ✅ Found {len(mcp_tools)} tools in MCP server"
+        yield "- 🤖 Initializing agent with tools from MCP server..."
         
-    async def put(self, item):
-        await self.queue.put(item)
+        agent = Agent(tools=mcp_tools, model=MODEL_ID)
+        response = agent(user_message)
+        
+        yield "---"
+        yield f"**Answer:** {extract_response_text(response)}"
 
-    async def finish(self):
-        self.finished = True
-        await self.queue.put(None)
-
-    async def stream(self):
-        while True:
-            item = await self.queue.get()
-            if item is None:
-                if self.finished:
-                    break
-                continue
-            yield item
-
-queue = StreamingQueue()
+async def handle_authentication(user_message: str) -> AsyncGenerator[str, None]:
+    """Handle MCP authentication flow"""
+    yield "- 🔐 Authentication for MCP server required"
+    
+    try:
+        auth_task = asyncio.create_task(acquire_mcp_access_token(access_token=""))
+        await asyncio.sleep(3)  # Wait for fetching cached token and auth url
+        
+        if auth_state.access_token:
+            yield "- ✅ Cached access token found, proceeding with request..."
+        else:
+            # no cached access token available, user interaction needed
+            yield f"- 🔗 **Please click this link to authorize MCP server:** {auth_state.auth_url}"
+            yield "- ⏳ Waiting for you to complete authorization..."
+            await asyncio.wait_for(auth_task, timeout=300) # Wait for user to complete authentication
+        
+        yield "- ✅ MCP Authentication successful"
+        yield "- 🔗 Reconnecting to the MCP server..."
+        
+        # Process request after authentication
+        async for message in process_with_mcp(user_message):
+            yield message
+            
+    except asyncio.TimeoutError:
+        yield "⏰ Authorization timed out. Please try again."
+    except Exception as e:
+        yield f"❌ Authentication failed: {str(e)}"
 
 @app.entrypoint
-async def agent_invocation(payload):
-    async def stream_response():
-        user_message = payload.get("prompt", "No prompt found in input")
-        if not user_message or user_message == "No prompt found in input":
-            yield "❌ No valid prompt provided"
-            return
+async def agent_invocation(payload: Dict[str, Any]) -> AsyncGenerator[str, None]:
+    """Main agent invocation handler"""
+    user_message = payload.get("prompt", "")
+    if not user_message:
+        yield "❌ No valid prompt provided"
+        return
 
-        yield "- 🚀 Starting travel agent"
-        yield f"- 📝 Processing request: {user_message[:50]}{'...' if len(user_message) > 50 else ''}"
-        
-        try:
-            yield "- 🔗 Connecting to weather service"
-            
-            global MCP_ACCESS_TOKEN
-            mcp_client = MCPClient(
-                lambda: streamablehttp_client(
-                    url=mcp_url, 
-                    headers={"Authorization": f"Bearer {MCP_ACCESS_TOKEN}"}
-                )
-            )
-            
-            yield "- 🔍 Discovering available tools"
-            
-            with mcp_client:
-                mcp_tools = mcp_client.list_tools_sync()
-                yield f"- ✅ Found {len(mcp_tools)} tools"
-                yield "- 🤖 Initializing AI agent"
-                yield "- 💭 Processing your request"
-                
-                agent = Agent(tools=mcp_tools, model=MODEL_ID)
-                response = agent(user_message)
-                
-                # Extract clean response text
-                if hasattr(response, 'message') and isinstance(response.message, dict):
-                    if 'content' in response.message and isinstance(response.message['content'], list):
-                        clean_response = response.message['content'][0].get('text', str(response.message))
-                    else:
-                        clean_response = str(response.message)
-                else:
-                    clean_response = str(response.message)
-                
-                yield "---"  # Separator
-                yield f"**Answer:** {clean_response}"
-            
-        except Exception as e:
-            error_info = {
-                "error": str(e),
-                "error_type": type(e).__name__,
-                "timestamp": datetime.datetime.now().isoformat()
-            }
-            
-            global MCP_ACCESS_TOKEN
-            if "client initialization failed" in str(e).lower() or IsMCPAuthenticationError(error_info) or not MCP_ACCESS_TOKEN:
-                yield "- 🔐 Authentication required"
-                yield "- 🔑 Requesting access permissions"
-                
-                try:
-                    # Start the auth process
-                    auth_task = asyncio.create_task(need_mcp_access_token(access_token=""))
-                    
-                    # Wait a moment for the auth URL to be set
-                    await asyncio.sleep(1)
-                    
-                    if auth_url_holder["url"]:
-                        yield f"- 🔗 **Please click this link to authorize:** {auth_url_holder['url']}"
-                        yield "- ⏳ Waiting for you to complete authorization..."
-                    
-                    MCP_ACCESS_TOKEN = await asyncio.wait_for(auth_task, timeout=300)
-                    
-                    yield "- ✅ Authentication successful"
-                    yield "- 🔗 Reconnecting to weather service"
-                    yield "- 🔍 Rediscovering tools"
-
-                    mcp_client = MCPClient(
-                        lambda: streamablehttp_client(
-                            url=mcp_url, 
-                            headers={"Authorization": f"Bearer {MCP_ACCESS_TOKEN}"}
-                        )
-                    )
-                    
-                    with mcp_client:
-                        mcp_tools = mcp_client.list_tools_sync()
-                        yield f"- ✅ Reconnected! Found {len(mcp_tools)} tools"
-                        yield "- 💭 Processing your request"
-                        
-                        agent = Agent(tools=mcp_tools, model=MODEL_ID)
-                        response = agent(user_message)
-                        
-                        # Extract clean response text
-                        if hasattr(response, 'message') and isinstance(response.message, dict):
-                            if 'content' in response.message and isinstance(response.message['content'], list):
-                                clean_response = response.message['content'][0].get('text', str(response.message))
-                            else:
-                                clean_response = str(response.message)
-                        else:
-                            clean_response = str(response.message)
-                        
-                        yield "---"  # Separator
-                        yield f"**Answer:** {clean_response}"
-                        
-                except asyncio.TimeoutError:
-                    yield "⏰ Authorization timed out. Please try again."
-                except Exception as e2:
-                    yield f"❌ Authentication failed: {str(e2)}"
-            else:
-                yield f"❌ Service error: {str(e)}"
+    yield "- 🚀 Agent starts processing the request..."
     
-    return stream_response()
+    try:
+        async for message in process_with_mcp(user_message):
+            yield message
+    except Exception as e:
+        if is_auth_error(e):
+            async for message in handle_authentication(user_message):
+                yield message
+        else:
+            yield f"❌ Service error: {str(e)}"
 
 if __name__ == "__main__":
     app.run()
