@@ -1,4 +1,5 @@
 import os
+import json
 import asyncio
 import logging
 from datetime import datetime, timezone
@@ -19,9 +20,22 @@ logger = logging.getLogger(__name__)
 os.environ["STRANDS_OTEL_ENABLE_CONSOLE_EXPORT"] = "true"
 os.environ["OTEL_PYTHON_EXCLUDED_URLS"] = "/ping,/invocations"
 
+# Load configuration from JSON file
+try:
+    with open("weather_mcp.json", "r") as f:
+        config = json.load(f)
+except (FileNotFoundError, json.JSONDecodeError) as e:
+    raise Exception(f"Failed to load weather_mcp.json: {e}")
+
+# Validate required configuration values
+required_keys = ["MCP_AUTH_SCOPE", "MCP_URL"]
+for key in required_keys:
+    if key not in config or not config[key] or config[key].strip() == "":
+        raise Exception(f"Missing or empty required MCP configuration: {key}")
+
 # Configuration constants
-SCOPES = [os.getenv("MCP_AUTH_SCOPE", "api://a1945aaf-db68-4f7e-8074-b79922b0e735/read")]
-MCP_URL = os.getenv("MCP_ARN", "https://bedrock-agentcore.eu-central-1.amazonaws.com/runtimes/arn%3Aaws%3Abedrock-agentcore%3Aeu-central-1%3A548129671048%3Aruntime%2Fweather_mcp_server-sxP7oW85Im/invocations?qualifier=DEFAULT")
+SCOPES = [config["MCP_AUTH_SCOPE"]]
+MCP_URL = config["MCP_URL"]
 MODEL_ID = "eu.anthropic.claude-sonnet-4-20250514-v1:0"
 
 class AuthState:

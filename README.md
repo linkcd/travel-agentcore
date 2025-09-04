@@ -34,7 +34,7 @@ Extend the basic agent with enterprise-grade authentication using Microsoft Entr
 
 ---
 
-### [03. MCP Server with AgentCore](./03_host_mcp_server/)
+### [03. Host MCP Server with AgentCore Runtime](./03_host_mcp_server/)
 **Build and deploy Model Context Protocol (MCP) server with AgentCore Runtime**
 
 Deploy a dummy weather MCP server using Amazon Bedrock AgentCore Runtime, with Microsoft Entra ID authentication. This example demonstrates:
@@ -44,6 +44,19 @@ Deploy a dummy weather MCP server using Amazon Bedrock AgentCore Runtime, with M
 - Sample code of Device Code flow for token generation and testing
 
 **Key Technologies:** MCP Protocol, FastMCP, AgentCore Runtime, Microsoft Entra ID
+
+### [04. Connect Agent with MCP Server with 3LO Outbound Authentication](./04_agent_calls_mcp/)
+**Agent integration with MCP server using OAuth authentication**
+
+Connect an agent to the weather MCP server from Example 03, demonstrating end-to-end OAuth authentication flow (both Agent Inbound and Agent 3LO Outbound). This example shows:
+- Host both Agent and MCP with AgentCore Runtime
+- Agent-to-MCP server communication
+- 3LO (three-legged OAuth) outbound authentication
+- AgentCore Identity Provider configuration
+- Cached token management for subsequent requests
+- Streamlit client with authentication flow visualization
+
+**Key Technologies:** AgentCore Runtime, MCP Protocol, Microsoft Entra ID, 3LO OAuth, Streamlit
 
 ---
 
@@ -80,10 +93,8 @@ Deploy a dummy weather MCP server using Amazon Bedrock AgentCore Runtime, with M
 ## 🚀 Choose Your Starting Point
 - Want to build and run your agent in the cloud? Check out [Example 01](./01_agent_standalone/)
 - Need inbound authentication for your agent? Jump to [Example 02](./02_agent_inbound_authn/)
-- Want host MCP server in the cloud? Try [Example 03](./03_host_mcp_server/)
-- Looking for specific features? Check the roadmap above
-
-
+- Want to host MCP server in the cloud? Try [Example 03](./03_host_mcp_server/)
+- Need End-to-End agent-to-MCP communication with OAuth? Explore [Example 04](./04_agent_calls_mcp/)
 
 ## 📖 Documentation
 
@@ -101,4 +112,4 @@ We welcome contributions! Each example directory contains its own README with sp
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

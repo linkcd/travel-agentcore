@@ -221,8 +221,8 @@ def render_chat_interface():
             pass
 
 def main():
-    st.set_page_config(page_title="Chat Assistant", page_icon="💬")
-    st.title("Chat Assistant")
+    st.set_page_config(page_title="AgentCore Chat Assistant", page_icon="💬")
+    st.title("AgentCore Chat Assistant")
     
     # Validate configuration
     try:

@@ -1,0 +1,4 @@
+{
+  "MCP_AUTH_SCOPE": "api://[Weather_MCP_Entra_Client_ID]/read",
+  "MCP_URL": "[Weather_MCP_URL, for example https://bedrock-agentcore.eu-central-1.amazonaws.com/runtimes/arn%3Aaws%3Abedrock-agentcore%3Aeu-central-1%3A1234567890%3Aruntime%2Fweather_mcp_server-ABCDEFGHIJK/invocations?qualifier=DEFAULT]"
+}

@@ -1,4 +1,4 @@
-# 02. Agent With EntraID Inbound Authentication
+# 02. Agent with Entra ID Inbound Authentication
 
 ## Overview
 
@@ -85,18 +85,18 @@ The only different for this OAuth/JWT Inbound Authentication is the authorizer_c
 ## 4. Build and Deploy to AWS
 
 1. **Setup Environment Variables**
-   ```bash
-   # Copy the example file and update with your values
-   cp .env.example .env
-   # Edit .env file with your Entra ID configuration
-   ```
+```bash
+# Copy the example file and update with your values
+cp .env.example .env
+# Edit .env file with your Entra ID configuration
+```
 
 2. **Build and Deploy Agent**
-   ```bash
-   # Build and deploy agent
-   python ./scripts/deploy_agent.py
-   # The deployed agent ARN is automatically saved to .env file
-   ```
+```bash
+# Build and deploy agent
+python ./scripts/deploy_agent.py
+# The deployed agent ARN is automatically saved to .env file
+```
 
 ## 5. End User Authentication and Invoke the agent 
 
