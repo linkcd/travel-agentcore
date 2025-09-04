@@ -91,4 +91,4 @@ The screenshot demonstrates:
 
 ![Demo Video](./doc/demo.gif)
 
-<video src="./doc/demo.webm" controls>Download Demo Video</video>
+[Down demo (webm)](./doc/demo.webm)

@@ -45,6 +45,8 @@ Deploy a dummy weather MCP server using Amazon Bedrock AgentCore Runtime, with M
 
 **Key Technologies:** MCP Protocol, FastMCP, AgentCore Runtime, Microsoft Entra ID
 
+---
+
 ### [04. Connect Agent with MCP Server with 3LO Outbound Authentication](./04_agent_calls_mcp/)
 **Agent integration with MCP server using OAuth authentication**
 
@@ -56,7 +58,7 @@ Connect an agent to the weather MCP server from Example 03, demonstrating end-to
 - Cached token management for subsequent requests
 - Streamlit client with authentication flow visualization
 
-**Key Technologies:** AgentCore Runtime, MCP Protocol, Microsoft Entra ID, 3LO OAuth, Streamlit
+**Key Technologies:** AgentCore Runtime, AgentCore Identity, Microsoft Entra ID, 3LO OAuth
 
 ---
 
