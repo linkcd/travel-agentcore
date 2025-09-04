@@ -37,7 +37,7 @@ curl -X POST http://localhost:8080/invocations \
 We are going to use AgentCore CLI for build and deployment. You can find CLI ref at https://aws.github.io/bedrock-agentcore-starter-toolkit/api-reference/cli.html (AgentCore CLI is included in the PIP package *bedrock-agentcore-starter-toolkit*) 
 
 ```bash
-# Pass region, entrypoint and name of your agent as parameters, and follow the instruction to provide more info such as IAM Role, ECR and Auth.
+# Pass region, entrypoint and name of your agent as parameters
 agentcore configure --region eu-central-1 --entrypoint travel_agent_standalone.py --name travel_agent_standalone
 ```
 
@@ -67,7 +67,7 @@ You can Cloud Build (using AWS CodeBuild), which ideal for:
 - You are using non-ARM64 machine (such as x86_64/Windows with WSL) 
 
 ```bash
-agentcore launch                    # Uses CodeBuild - no Docker needed
+agentcore launch          # Uses CodeBuild - no local Docker needed
 ```
 
 ## 5. Invoke the agent 
@@ -77,9 +77,11 @@ Based on these info, you can invoke the agent using AgentCore CLI.
 # Test your deployed agent
 agentcore invoke '{"prompt": "Im planning to travel to Shanghai, and suggestion?"}'
 ```
+## 6. Authentication when invoking the agent
+As default, the AgentCor Runtime is using AWS IAM for invoke authentication. If you need to protect your agent with OAuth/JWT issue from an Identity Provider (idp) such as Entra ID, check out the [Example 2 OAuth Inbound Authentication](../02_agent_inbound_authn/)
 
-## 6. Observability
-### 6.1. CloudWatch Logs
+## 7. Observability
+### 7.1. CloudWatch Logs
 After the agent is deployed, you can monitor the agent logs in CloudWatch Logs. 
 The **agentcore launch** should have printed out the following useful info:
 ```bash

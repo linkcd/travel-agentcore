@@ -1,33 +1,33 @@
 # Travel Agent with Amazon Bedrock AgentCore
 
-A collection of examples demonstrating how to build, deploy, and secure AI travel agents using Amazon Bedrock AgentCore.
+A collection of examples demonstrating how to build, deploy, and secure agentic workload using Amazon Bedrock AgentCore.
 
 ## 🎯 Overview
 
-This repository showcases different patterns for implementing intelligent travel agents that can provide personalized travel recommendations, weather information, and travel planning assistance. Each example builds upon the previous one, demonstrating increasingly sophisticated deployment and security patterns.
+This repository showcases different patterns for implementing agents that can provide personalized travel recommendations, weather information, and travel planning assistance. Each example builds upon the previous one, demonstrating increasingly sophisticated deployment and security patterns.
 
-## 📚 Examples
+## 📚 Step By Step examples
 
 ### [01. Standalone Agent](./01_agent_standalone/)
-**Basic AgentCore deployment with no authentication**
+**Basic AgentCore Runtime Deployment**
 
 Learn the fundamentals of building and deploying agents to AWS using Amazon Bedrock AgentCore Runtime. This example covers:
 - Local development and testing
-- Cloud deployment with CodeBuild
+- Cloud build and deployment with CodeBuild
 - Basic agent invocation
 - Monitoring and observability
 
-**Key Technologies:** Amazon Bedrock, AgentCore Runtime, Strands Framework
+**Key Technologies:** Amazon Bedrock AgentCore Runtime, Strands Framework
 
 ---
 
-### [02. Agent with Entra ID Authentication](./02_agent_inbound_authn/)
-**Secure agent access with Microsoft Entra ID integration**
+### [02. Agent with Entra ID Inbound Authentication](./02_agent_inbound_authn/)
+**Secure agent inbound access with Microsoft Entra ID integration**
 
 Extend the basic agent with enterprise-grade authentication using Microsoft Entra ID. This example demonstrates:
 - JWT-based authentication with Entra ID
-- Two authentication flows: Device Code and Authorization Code
-- Streamlit chat interface with OAuth2
+- Authorization Code Flow
+- Streamlit client interface with OAuth2
 - Secure token management and validation
 
 **Key Technologies:** AgentCore Runtime, Microsoft Entra ID, OAuth2, JWT, Streamlit
@@ -35,13 +35,13 @@ Extend the basic agent with enterprise-grade authentication using Microsoft Entr
 ---
 
 ### [03. MCP Server with AgentCore](./03_host_mcp_server/)
-**Model Context Protocol (MCP) server deployment with Entra ID authentication**
+**Build and deploy Model Context Protocol (MCP) server with AgentCore Runtime**
 
-Deploy a weather MCP server using Amazon Bedrock AgentCore Runtime with Microsoft Entra ID authentication. This example demonstrates:
+Deploy a dummy weather MCP server using Amazon Bedrock AgentCore Runtime, with Microsoft Entra ID authentication. This example demonstrates:
 - MCP server implementation with FastMCP
-- AgentCore Runtime as MCP protocol host
-- OAuth2 authentication with Entra ID 
-- Sample code of Device Code flow for token generation
+- Deploy it with AgentCore Runtime as MCP protocol host
+- OAuth2 authentication with Entra ID for inbound access
+- Sample code of Device Code flow for token generation and testing
 
 **Key Technologies:** MCP Protocol, FastMCP, AgentCore Runtime, Microsoft Entra ID
 
@@ -50,6 +50,11 @@ Deploy a weather MCP server using Amazon Bedrock AgentCore Runtime with Microsof
 
 
 ## 🛠️ Project Setup
+
+### Prerequisites
+- An AWS Account
+- Entra ID (as Identity Provider)
+- Permissions to create application registrations in Entra ID. Note that we are not running any workload in Azure/Entra ID. It is only used for Identity provider.
 
 ### Initial Setup
 
@@ -72,23 +77,13 @@ Deploy a weather MCP server using Amazon Bedrock AgentCore Runtime with Microsof
    
    This installs all packages needed for deployment and testing scripts across all examples.
 
-## 🚀 Getting Started
+## 🚀 Choose Your Starting Point
+- Want to build and run your agent in the cloud? Check out [Example 01](./01_agent_standalone/)
+- Need inbound authentication for your agent? Jump to [Example 02](./02_agent_inbound_authn/)
+- Want host MCP server in the cloud? Try [Example 03](./03_host_mcp_server/)
+- Looking for specific features? Check the roadmap above
 
-1. **Prerequisites**
-   - Complete the Project Setup above
 
-2. **Choose Your Starting Point**
-   - New to AgentCore? Start with [Example 01](./01_agent_standalone/)
-   - Need OAuth authentication With IDP such as EntraID? Jump to [Example 02](./02_agent_inbound_authn/)
-   - Want host MCP server in the cloud? Try [Example 03](./03_host_mcp_server/)
-   - Looking for specific features? Check the roadmap above
-
-3. **Follow the Pattern**
-   Each example includes:
-   - Detailed setup instructions
-   - Step-by-step deployment guide
-   - Testing and validation steps
-   - Troubleshooting tips
 
 ## 📖 Documentation
 

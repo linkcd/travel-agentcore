@@ -12,38 +12,38 @@ This example shows how to how to do Agent inbound authentication with Entra ID.
 
 ### 1.1 Create application registration for Agent
 1. Go to Entra ID → App registrations → New registration.
-2. Name it something **travel_agent**.
+2. Name it **travel_agent**.
 3. Set the Supported account types (e.g. Single tenant for testing).
 ![Entra ID app](./doc/entra_app_overview.png)
 4. After it’s created:
 - Take notes of Entra Tenant ID 
 - Take notes of Entra Application (client) ID
 5. Create Scope
-- Go to **Expose an API** → Click Set for Application ID URI (it’ll look like api://<client-id> by default).
+- Go to **Expose an API** → Click Set for Application ID URI (it’ll look like api://[client-id] by default).
 - Click Add a scope:
    - Name: read
    - Who can consent: Admins and users
-- Now you have a scope: "api://<client-id>/read"
+- Now you have a scope: "api://[client-id]/read"
 ![Create Scope](./doc/create_scope.png)
 
 ### 1.2 IMPORTANT: Force EntraID to use OAuth V2 endpoint
-During the Oauth flow, the EntraID might issue access token with ver 1 style, where the iss is "https://sts.windows.net/<tenant_id>/"
+During the Oauth flow, the EntraID might issue access token with version 1 format, where the iss is "https://sts.windows.net/[tenant_id]/"
 ```json
 {
   "aud": "api://<agent_client_id>",
-  "iss": "https://sts.windows.net/<tenant_id>/",
+  "iss": "https://sts.windows.net/[tenant_id]/",
 }
 ```
 
-But we need the version 2 style as below
+But we need the version 2 format as below
 ```json
 {
-  "aud": "<agent_client_id>",
-  "iss": "https://login.microsoftonline.com/<tenant_id>/v2.0"
+  "aud": "[agent_client_id]",
+  "iss": "https://login.microsoftonline.com/[tenant_id]/v2.0"
 }
 ```
 
-To force Entra Id to use V2 enpoint, you have to 
+To force Entra Id to use V2 format, you have to 
 1. Go to Azure Portal → App registrations → Find your **travel_agent** app
 2. Go to Manifest
 3. Find **accessTokenAcceptedVersion** and change it from null (or 1) to 2:
@@ -52,7 +52,7 @@ To force Entra Id to use V2 enpoint, you have to
 
 You can read more about it at [here](https://learn.microsoft.com/en-us/entra/identity-platform/access-tokens#token-formats), [here](https://learn.microsoft.com/en-us/entra/identity-platform/reference-app-manifest#accesstokenacceptedversion-attribute) and [here](https://learn.microsoft.com/en-us/entra/identity-platform/reference-microsoft-graph-app-manifest) 
 
-After this, we will get correct access token in the format that we need:
+After this, we will get correct access token in version 2 format that we need, after Oauth flow:
 ![Got correct v2 access token](./doc/v2_access_token.png)
 
 
@@ -60,11 +60,8 @@ After this, we will get correct access token in the format that we need:
 This is the app that will request a token to call your Agent.
 1. Register another app in Entra ID → call it **my_agent_client**.
 2. Add a redirect URI (http://localhost:8501 for Streamlit).
-3. *NOT NEED* Under API permissions, click Add a permission → My APIs → **travel_agent** → Delegated permissions → **read**. 
-Grant admin consent.
-![Client app access to Agent app scope](./doc/agent_client.png)
-4. Create application secrete 
-5. Create Web Redirect URL for local streamlit app: http://localhost:8501
+3. Create application secrete 
+4. Create Web Redirect URL for local streamlit app: http://localhost:8501
 
 
 ## 2. Reuse the agent application code as before
@@ -72,6 +69,18 @@ the agent file is identical as [travel_agent_standalone.py](./travel_agent_stand
 
 ## 3. Create deployment script
 [Deployment script](./scripts/deploy_agent.py)
+
+The only different for this OAuth/JWT Inbound Authentication is the authorizer_configuration part
+```python
+        .....
+        authorizer_configuration={
+            "customJWTAuthorizer": {
+                "discoveryUrl": discovery_url,
+                "allowedAudience": [audience]
+            }
+        }
+        .....
+```
 
 ## 4. Build and Deploy to AWS
 
