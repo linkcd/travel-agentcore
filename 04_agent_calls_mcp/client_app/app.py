@@ -175,7 +175,7 @@ def render_chat_interface():
     active_session = get_active_session()
     
     # Display session name
-    st.subheader(f"💬 {active_session['name']}")
+    st.subheader(f"💬 Session ID: {active_session['name']}")
     
     # Display chat messages
     for message in active_session["messages"]:
