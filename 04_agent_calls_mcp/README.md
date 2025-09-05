@@ -102,4 +102,4 @@ The screenshot demonstrates:
 
 ![Demo Video](./doc/demo.gif)
 
-[Down demo (webm)](./doc/demo.webm)
+[Download demo video (webm)](./doc/demo.webm)
