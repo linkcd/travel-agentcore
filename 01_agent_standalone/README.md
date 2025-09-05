@@ -8,6 +8,9 @@ This tutorial demonstrates how to host a Strands Agent using Amazon Bedrock mode
 - Document: https://docs.aws.amazon.com/bedrock-agentcore/
 - AgentCore Starter Toolkit User Guide: https://aws.github.io/bedrock-agentcore-starter-toolkit/index.html
 
+## Architecture
+![Architecture](./doc/architecture%201.png)
+
 ## 1. Local dev environment setup
 ```bash
 python -m venv .venv

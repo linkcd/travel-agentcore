@@ -9,6 +9,17 @@ We'll create a new version of the travel agent. Instead of including tools insid
 **Prerequisites:** Deploy the weather MCP server from Example 03 first. 
 
 ## 2. Architecture
+![Architecture](./doc/architecture%204.png)
+
+```markdown
+Note:
+- Tenant A: Used for Travel Agent Inbound Authentication
+- Tenant B: Used for:
+  - Travel Agent Outbound Authentication 
+  - Weather MCP Inbound Authentication
+
+For simplicity, this example uses the same Entra ID tenant for both Tenant A and Tenant B.
+```
 
 ## 3. Create AgentCore Identity Provider
 

@@ -6,6 +6,9 @@ Since MCP only supports OAuth, we use the same OAuth/JWT inbound authentication 
 
 **Documentation:** https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-mcp.html 
 
+## Architecture
+![Architecture](./doc/architecture%203.png)
+
 
 ## 1. Create Entra ID App Registration for Weather MCP
 

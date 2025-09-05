@@ -4,6 +4,9 @@
 
 This example shows how to how to do Agent inbound authentication with Entra ID.
 
+## Architecture
+![Architecture](./doc/architecture%202.png)
+
 ## AgentCore Document and User Guide
 - https://github.com/awslabs/amazon-bedrock-agentcore-samples/blob/main/01-tutorials/03-AgentCore-identity/03-Inbound%20Auth%20example/inbound_auth_runtime_with_strands_and_bedrock_models.ipynb
 - https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/identity-idp-microsoft.html
