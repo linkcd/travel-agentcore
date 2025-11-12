@@ -62,6 +62,20 @@ Connect an agent to the weather MCP server from Example 03, demonstrating end-to
 
 ---
 
+### [05. Travel Agent with AgentCore Memory](./05_agent_memory/)
+**Persistent conversation memory**
+
+Build a travel agent that remembers conversations across sessions using AgentCore's native memory integration. This example demonstrates:
+- Persistent conversation memory across agent restarts
+- Automatic memory resource creation and management
+- Native Strands framework memory integration
+- Colored terminal output for enhanced user experience
+- Session-based memory with configurable retention
+
+**Key Technologies:** AgentCore Memory, MemoryManager, Strands Framework, Rich Console
+
+---
+
 
 
 ## 🛠️ Project Setup
@@ -97,6 +111,7 @@ Connect an agent to the weather MCP server from Example 03, demonstrating end-to
 - Need inbound authentication for your agent? Jump to [Example 02](./02_agent_inbound_authn/)
 - Want to host MCP server in the cloud? Try [Example 03](./03_host_mcp_server/)
 - Need End-to-End agent-to-MCP communication with OAuth? Explore [Example 04](./04_agent_calls_mcp/)
+- Want persistent conversation memory for your agent? Try [Example 05](./05_agent_memory/)
 
 ## 📖 Documentation
 
