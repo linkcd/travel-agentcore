@@ -1,0 +1,16 @@
+[project]
+name = "travel-agent-inbound-authn"
+version = "0.1.0"
+description = "Travel agent with Entra ID inbound authentication"
+requires-python = ">=3.10"
+dependencies = [
+    "strands-agents",
+    "strands-agents-tools",
+    "bedrock-agentcore",
+    "bedrock-agentcore-starter-toolkit",
+    "streamlit",
+    "python-dotenv",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = []

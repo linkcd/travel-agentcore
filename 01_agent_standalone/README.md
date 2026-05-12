@@ -12,10 +12,10 @@ This tutorial demonstrates how to host a Strands Agent using Amazon Bedrock mode
 ![Architecture](./doc/architecture%201.png)
 
 ## 1. Local dev environment setup
+
+### Using uv
 ```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
+uv sync --no-install-project
 ```
 
 ## 2. Create the app file of your agent
@@ -23,8 +23,8 @@ Create a simple agent [travel_agent_standalone.py](./travel-agent.py)
 
 ## 3. Run and test the agent locally
 ```bash
-# Start your agent
-python travel_agent_standalone.py
+uv run travel_agent_standalone.py
+# now you can run the following curl command in a new terminal window
 ```
 
 ```bash
@@ -41,7 +41,8 @@ We are going to use AgentCore CLI for build and deployment. You can find CLI ref
 
 ```bash
 # Pass region, entrypoint and name of your agent as parameters
-agentcore configure --region eu-central-1 --entrypoint travel_agent_standalone.py --name travel_agent_standalone
+uv run agentcore configure --region eu-central-1 --entrypoint travel_agent_standalone.py --name travel_agent_standalone
+
 ```
 
 Based on your inputs, it generates (or update) these following files for real deployment:
@@ -55,9 +56,10 @@ There are several options for building the agent docker image:
 #### 4.2.1. Local Build (requires docker on local machine)
 If you are using ARM64 machine, you can build it locally fairly fast. 
 ```bash
-agentcore launch --local            # Build and run locally
+uv run agentcore launch --local            # Build and run locally
 # or
-agentcore launch --local-build      # Build locally, deploy to cloud                                    
+uv run agentcore launch --local-build      # Build locally, deploy to cloud
+                                
 ```
 **NOTE**: 
 If you are using Non-ARM64 machine (For example: x86_64/Windows with WSL), you can follow the [custom image build steps](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/getting-started-custom.html#build-and-deploy-arm64-image) for docker cross-platform build. However, cross-platform build could be very slow (more than 1 hour). 
@@ -70,7 +72,7 @@ You can Cloud Build (using AWS CodeBuild), which ideal for:
 - You are using non-ARM64 machine (such as x86_64/Windows with WSL) 
 
 ```bash
-agentcore launch          # Uses CodeBuild - no local Docker needed
+uv run agentcore launch          # Uses CodeBuild - no local Docker needed
 ```
 
 ## 5. Invoke the agent 
@@ -78,8 +80,9 @@ Once the Cloud Build and Deployment is done, the deployed agent information such
 Based on these info, you can invoke the agent using AgentCore CLI. 
 ```bash
 # Test your deployed agent
-agentcore invoke '{"prompt": "Im planning to travel to Shanghai, and suggestion?"}'
+uv run agentcore invoke '{"prompt": "Im planning to travel to Shanghai, and suggestion?"}'
 ```
+
 ## 6. Authentication when invoking the agent
 As default, the AgentCor Runtime is using AWS IAM for invoke authentication. If you need to protect your agent with OAuth/JWT issue from an Identity Provider (idp) such as Entra ID, check out the [Example 2 OAuth Inbound Authentication](../02_agent_inbound_authn/)
 

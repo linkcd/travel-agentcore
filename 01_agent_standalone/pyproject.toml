@@ -1,0 +1,14 @@
+[project]
+name = "travel-agent-standalone"
+version = "0.1.0"
+description = "Standalone travel agent with Amazon Bedrock AgentCore Runtime"
+requires-python = ">=3.10"
+dependencies = [
+    "strands-agents",
+    "strands-agents-tools",
+    "bedrock-agentcore",
+    "bedrock-agentcore-starter-toolkit",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = []

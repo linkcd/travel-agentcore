@@ -93,18 +93,14 @@ Build a travel agent that remembers conversations across sessions using AgentCor
    cd travel-agentcore
    ```
 
-2. **Create and Activate Python Virtual Environment**
+2. **Install Dependencies with uv**
    ```bash
-   python -m venv .venv
-   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-   ```
-
-3. **Install Dependencies**
-   ```bash
-   pip install -r requirements.txt
+   uv sync --no-install-project
    ```
    
    This installs all packages needed for deployment and testing scripts across all examples.
+   
+   *Note: Examples 01-04 use traditional pip/venv setup, while Example 05 uses uv. You can use either approach.*
 
 ## 🚀 Choose Your Starting Point
 - Want to build and run your agent in the cloud? Check out [Example 01](./01_agent_standalone/)

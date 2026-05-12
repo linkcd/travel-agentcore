@@ -94,9 +94,24 @@ cp .env.example .env
 # Edit .env file with your Entra ID configuration
 ```
 
-2. **Build and Deploy Agent**
+2. **Install Dependencies**
+```bash
+# Using uv (recommended)
+uv sync --no-install-project
+
+# Or using traditional pip/venv
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+3. **Build and Deploy Agent**
 ```bash
 # Build and deploy agent
+# With uv:
+uv run python ./scripts/deploy_agent.py
+
+# Or with traditional setup:
 python ./scripts/deploy_agent.py
 # The deployed agent ARN is automatically saved to .env file
 ```
@@ -106,6 +121,10 @@ python ./scripts/deploy_agent.py
 ### Streamlit App - Using Authentication Code Flow
 ```bash
 # Run the Streamlit chat application (environment variables loaded automatically)
+# With uv:
+uv run streamlit run client_app/app.py
+
+# Or with traditional setup:
 streamlit run client_app/app.py
 ```
 
